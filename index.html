@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>EFS Facade CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090F;--sf:#0C1018;--s2:#111826;--s3:#18202E;
+  --b1:#1C2A3E;--b2:#243347;
+  --ac:#1D6EE8;--ac2:#4A8FF0;--acg:rgba(29,110,232,.2);
+  --go:#C9962A;--go2:#E8B84B;
+  --gn:#0EA472;--gn2:#12C78A;
+  --am:#E09B1A;--rd:#D94040;--rd2:#EF6060;--pu:#7C4DDB;
+  --tx:#DDE4EF;--tx2:#7E93B0;--tx3:#3D5270;
+  --fn:'Outfit',sans-serif;--mo:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow-x:hidden;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+input,select,textarea,button{font-family:var(--fn)}button{cursor:pointer}a{color:inherit;text-decoration:none}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:300;flex-direction:column;gap:14px}
+.ldlogo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--ac),#1344A8);display:flex;align-items:center;justify-content:center;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.ldtxt{color:var(--tx3);font-size:13px}
+#auth{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:200;flex-direction:column}
+.acard{background:var(--sf);border:1px solid var(--b2);border-radius:24px;padding:50px 42px;text-align:center;max-width:400px;width:90%;box-shadow:0 0 80px rgba(29,110,232,.07)}
+.aicon{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--ac),#1344A8);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.atitle{font-size:24px;font-weight:800;letter-spacing:-.4px;margin-bottom:8px}
+.asub{color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:30px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#1a1a2e;border:none;border-radius:12px;padding:13px 28px;font-size:14px;font-weight:700;width:100%;transition:transform .15s,box-shadow .15s;cursor:pointer}
+.gbtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#wrap{display:none;min-height:100vh}
+#sidebar{width:220px;background:var(--sf);border-right:1px solid var(--b1);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .3s}
+#main{margin-left:220px;padding:32px 36px;min-height:100vh}
+#hbtn{display:none;position:fixed;top:14px;left:14px;z-index:60;background:var(--sf);border:1px solid var(--b1);border-radius:10px;padding:8px 11px;color:var(--tx);font-size:18px;line-height:1}
+#sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:45}
+.slogo{padding:22px 20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--b1)}
+.sic{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ac),#1344A8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.snm{font-size:15px;font-weight:800;letter-spacing:-.3px}.srl{font-size:9px;color:var(--tx3);letter-spacing:1.8px;text-transform:uppercase;margin-top:1px}
+.snav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.si{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:none;background:transparent;color:var(--tx3);font-size:13px;font-weight:500;text-align:left;width:100%;transition:all .15s;position:relative;cursor:pointer}
+.si:hover{background:var(--s2);color:var(--tx2)}.si.on{background:rgba(29,110,232,.12);color:var(--ac2);font-weight:600}
+.si.on::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:3px;background:var(--ac);border-radius:0 3px 3px 0}
+.sbdg{margin-left:auto;background:var(--am);color:#000;border-radius:99px;padding:1px 7px;font-size:10px;font-weight:700}
+.sfoot{padding:16px 18px;border-top:1px solid var(--b1)}
+.susr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.sav{width:32px;height:32px;border-radius:50%;background:var(--ac);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;overflow:hidden;flex-shrink:0}
+.sav img{width:100%;height:100%;object-fit:cover}
+.sunm{font-size:12px;font-weight:600}.surl{font-size:10px;color:var(--tx3);margin-top:1px}
+.pipbar{background:var(--s3);border-radius:4px;height:5px;overflow:hidden;margin-bottom:4px}
+.pipfil{height:100%;background:linear-gradient(90deg,var(--ac),var(--go));border-radius:4px;transition:width 1s ease}
+.piplbl{font-size:10px;color:var(--go2);font-family:var(--mo)}
+.bso{background:none;border:1px solid var(--b1);color:var(--tx3);border-radius:8px;padding:6px 12px;font-size:11px;width:100%;margin-top:10px;transition:all .2s;cursor:pointer}
+.bso:hover{border-color:var(--rd);color:var(--rd2)}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:26px;gap:12px;flex-wrap:wrap}
+.pt{font-size:24px;font-weight:800;letter-spacing:-.4px}.ps{color:var(--tx3);font-size:13px;margin-top:3px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:26px}
+.scard{background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;animation:fu .4s ease both}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--cc,var(--ac))}
+.slbl{color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:10px}
+.sval{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1}.ssub{color:var(--tx3);font-size:11px;margin-top:6px;font-family:var(--mo)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;padding:9px 18px;font-size:13px;font-weight:600;transition:all .15s;cursor:pointer}
+.bp{background:var(--ac);color:#fff}.bp:hover{background:var(--ac2);transform:translateY(-1px)}
+.bg2{background:var(--s2);border:1px solid var(--b1);color:var(--tx2)}.bg2:hover{border-color:var(--b2);color:var(--tx)}
+.bsm{padding:6px 12px;font-size:12px;border-radius:8px}
+.bai{background:linear-gradient(135deg,var(--ac),var(--pu));color:#fff;box-shadow:0 0 24px var(--acg)}.bai:hover{transform:translateY(-1px)}
+.bwa{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);color:#25D366;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px;cursor:pointer}.bwa:hover{background:rgba(37,211,102,.18)}
+.pill{border-radius:99px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;font-family:var(--mo);white-space:nowrap;display:inline-block}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.pc{background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .2s,transform .2s;animation:fu .35s ease both}
+.pc:hover{border-color:var(--b2);transform:translateY(-2px)}
+.pnm{font-size:15px;font-weight:700;margin-bottom:4px;line-height:1.3}.pdv{color:var(--tx2);font-size:12px}
+.pmeta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}
+.pml{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);display:block;margin-bottom:3px}
+.pmv{font-size:14px;font-weight:700}.gold{color:var(--go2);font-family:var(--mo)}
+.pft{margin-top:12px;padding-top:12px;border-top:1px solid var(--b1);color:var(--tx3);font-size:11px;display:flex;align-items:center;gap:6px}
+#dov{position:fixed;inset:0;background:rgba(4,8,16,.82);backdrop-filter:blur(10px);z-index:100;display:none;align-items:center;justify-content:flex-end;padding:16px}
+#dp{width:min(680px,100%);height:calc(100vh - 32px);background:var(--sf);border:1px solid var(--b2);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;animation:si .3s ease}
+@keyframes si{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+#dh{padding:20px 24px;border-bottom:1px solid var(--b1);background:linear-gradient(180deg,var(--s2),var(--sf))}
+#dt{display:flex;border-bottom:1px solid var(--b1);padding:0 16px;overflow-x:auto}
+.dtab{background:none;border:none;padding:12px 15px;font-size:12px;font-weight:600;color:var(--tx3);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;cursor:pointer}
+.dtab.on{color:var(--tx);border-bottom-color:var(--ac)}
+#db{flex:1;overflow-y:auto;padding:20px}
+#mov{position:fixed;inset:0;background:rgba(4,8,16,.88);backdrop-filter:blur(10px);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--sf);border:1px solid var(--b2);border-radius:20px;width:min(560px,100%);max-height:90vh;overflow-y:auto;animation:sc .2s ease}
+@keyframes sc{from{transform:scale(.93);opacity:0}to{transform:scale(1);opacity:1}}
+.mh{padding:22px 26px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--b1)}
+.mt{font-size:18px;font-weight:800}.mb{padding:22px 26px}.mf{padding:16px 26px;border-top:1px solid var(--b1);display:flex;gap:10px;justify-content:flex-end}
+.fg{margin-bottom:15px}
+.fg label{display:block;color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.fc{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:10px 13px;color:var(--tx);font-size:13px;transition:border-color .2s;outline:none}
+.fc:focus{border-color:var(--ac)}.fc::placeholder{color:var(--tx3)}
+select.fc option{background:var(--s2)}textarea.fc{resize:vertical;min-height:78px;line-height:1.6}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.aitm{display:flex;gap:12px;background:var(--s2);border:1px solid var(--b1);border-radius:11px;padding:13px;margin-bottom:8px}
+.aibdg{min-width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(29,110,232,.15);flex-shrink:0}
+.aitp{display:flex;justify-content:space-between;margin-bottom:3px}
+.aityp{font-size:12px;font-weight:600}.aidt{font-size:10px;color:var(--tx3);font-family:var(--mo)}
+.ainot{font-size:13px;color:var(--tx2);line-height:1.6}
+.ti{display:flex;align-items:center;gap:11px;background:var(--s2);border-radius:11px;padding:12px 15px;margin-bottom:7px;border:1px solid var(--b1);transition:border-color .2s}
+.ti.ov{border-color:rgba(217,64,64,.35)}
+.tck{width:22px;height:22px;border-radius:6px;border:2px solid var(--b2);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;cursor:pointer}
+.tck.dn{background:var(--gn);border-color:var(--gn)}
+.ttx{flex:1;font-size:13px;color:var(--tx);transition:color .2s}.ttx.dn{color:var(--tx3);text-decoration:line-through}
+.tdu{font-size:10px;font-family:var(--mo);margin-top:2px}
+.frow{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.flbl{width:140px;text-align:right;flex-shrink:0}
+.fbw{flex:1;background:var(--s2);border-radius:8px;height:44px;position:relative;overflow:hidden}
+.fbf{height:100%;border-radius:8px;transition:width 1s ease}
+.fbc{position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;gap:7px;overflow:hidden}
+.fchp{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:3px 8px;font-size:11px;white-space:nowrap;color:var(--tx)}
+.fval{width:84px;text-align:right;font-family:var(--mo);font-size:13px;color:var(--go2);font-weight:600;flex-shrink:0}
+.fcnt{width:22px;text-align:center;font-size:13px;font-weight:700;color:var(--tx3);flex-shrink:0}
+.aichps{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.aichp{background:var(--s2);border:1px solid var(--b2);color:var(--tx2);border-radius:20px;padding:6px 13px;font-size:11px;cursor:pointer;transition:all .2s}
+.aichp:hover{border-color:var(--ac);color:var(--ac2)}
+.airesp{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:20px;white-space:pre-wrap;font-size:13px;line-height:1.9;color:var(--tx);margin-top:14px;max-height:420px;overflow-y:auto}
+.spin{width:38px;height:38px;border:3px solid var(--b1);border-top:3px solid var(--ac);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ibox{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:15px;margin-bottom:13px}
+.iblt{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:6px;font-weight:700}
+.ibv{font-size:13px;color:var(--tx);line-height:1.7}
+.sh{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--tx3);margin-bottom:12px}
+.empty{text-align:center;padding:44px 20px;color:var(--tx3)}.ei{font-size:34px;margin-bottom:10px}
+.fchrow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.fc2{background:var(--s2);border:1px solid var(--b1);color:var(--tx3);border-radius:99px;padding:5px 13px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+.fc2:hover,.fc2.on{background:rgba(29,110,232,.12);border-color:var(--ac);color:var(--ac2)}
+.spbar{display:flex;gap:2px;margin-top:10px}.spseg{flex:1;height:5px;border-radius:3px;transition:background .3s}
+#toast{position:fixed;bottom:22px;right:22px;z-index:400;display:flex;flex-direction:column;gap:7px}
+.tst{background:var(--sf);border:1px solid var(--b2);border-radius:11px;padding:11px 17px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;animation:fu .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4);max-width:310px}
+.tst.ok{border-left:3px solid var(--gn)}.tst.er{border-left:3px solid var(--rd)}.tst.in{border-left:3px solid var(--ac)}
+.alist{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.ait{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:10px 13px}
+.aiic{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--s3);flex-shrink:0}
+.ainm{font-size:12px;font-weight:600;color:var(--tx);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aisz{font-size:10px;color:var(--tx3);font-family:var(--mo)}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}#sidebar.op{transform:translateX(0)}
+  #sov.op{display:block}#main{margin-left:0;padding:18px 14px;padding-top:62px}
+  #hbtn{display:block}.pgrid{grid-template-columns:1fr}
+  #dp{width:100%;height:100vh;border-radius:0}#dov{padding:0}
+  .pt{font-size:20px}.sgrid{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}
+  .frow{flex-wrap:wrap}.flbl{width:100%;text-align:left}
+}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="ldlogo"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="1"/><path d="M2 9h20M8 21V9M16 21V9"/></svg></div>
+  <div class="ldtxt">Loading EFS CRM...</div>
+</div>
+<div id="auth">
+  <div class="acard">
+    <div class="aicon"><svg width="28" height="28" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="1"/><path d="M2 9h20M8 21V9M16 21V9"/></svg></div>
+    <div class="atitle">EFS Facade CRM</div>
+    <div class="asub">Enterprise pipeline management for Everest Facade Systems BDM. Sign in to access your deals and Google Drive storage.</div>
+    <button class="gbtn" onclick="doSignIn()"><img src="https://www.google.com/favicon.ico" width="20" height="20" alt=""/>Continue with Google</button>
+    <div style="margin-top:18px;font-size:11px;color:var(--tx3)">Data stored privately on your Google Drive</div>
+  </div>
+</div>
+<button id="hbtn" onclick="togSB()">&#9776;</button>
+<div id="sov" onclick="togSB()"></div>
+<div id="wrap">
+  <div id="sidebar">
+    <div class="slogo">
+      <div class="sic"><svg width="20" height="20" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="1"/><path d="M2 9h20M8 21V9M16 21V9"/></svg></div>
+      <div><div class="snm">EFS CRM</div><div class="srl">Facade BDM</div></div>
+    </div>
+    <div class="snav" id="snav"></div>
+    <div class="sfoot">
+      <div class="susr"><div class="sav" id="sav">A</div><div><div class="sunm" id="sunm">Ajinkya</div><div class="surl">BDM &middot; EFS Mumbai</div></div></div>
+      <div style="margin-bottom:6px"><div style="font-size:10px;color:var(--tx3);margin-bottom:5px">Pipeline vs &#8377;12Cr</div><div class="pipbar"><div class="pipfil" id="pipfil" style="width:0%"></div></div><div class="piplbl" id="piplbl">-</div></div>
+      <button class="bso" onclick="doSignOut()">Sign Out</button>
+    </div>
+  </div>
+  <div id="main"><div id="pg"></div></div>
+</div>
+<div id="dov" onclick="ovClk(event)"><div id="dp"><div id="dh"></div><div id="dt"></div><div id="db"></div></div></div>
+<div id="mov" onclick="movClk(event)"><div class="modal" id="mbox"></div></div>
+<div id="toast"></div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer onload="gapiLoad()"></script>
+<script>
+var CLIENT_ID='741609954421-nin44kc4ct0cskhpgd64rjtrkcc8v34e.apps.googleusercontent.com';
+var SCOPES='https://www.googleapis.com/auth/drive.file';
+var DB_NAME='efs_crm_v2.json';
+// FREE AI - Get your key at console.groq.com (takes 2 minutes, completely free)
+var GROQ_KEY='';
+var GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
+var GROQ_MODEL='llama-3.3-70b-versatile';
+
+var STAGES=['Lead','Prospect','Proposal Sent','Negotiation','Awarded','Lost'];
+var SCOL={'Lead':'#4A5C7A','Prospect':'#1D6EE8','Proposal Sent':'#7C4DDB','Negotiation':'#E09B1A','Awarded':'#0EA472','Lost':'#D94040'};
+var SYSTEMS=['Curtain Wall','Unitised Glazing','ACP Cladding','Spider Glazing','Structural Glazing','Aluminium Windows','Skylights','EIFS/DEFS','Composite Panel','Stone Cladding'];
+var DEVS=['Godrej Properties','Lodha Group','Hiranandani','Oberoi Realty','Tata Realty','Adani Realty','Prescon','Shapoorji Pallonji','L&T Realty','Kalpataru','Macrotech','Piramal Realty','Kolte-Patil','Raymond Realty','Birla Estates'];
+var ATYPES=['Call','Meeting','Email','Site Visit','Negotiation','Presentation','WhatsApp'];
+var AICONS={'Call':'📞','Meeting':'🤝','Email':'📧','Site Visit':'🏗️','Negotiation':'💼','Presentation':'📊','WhatsApp':'💬'};
+var NAVS=[{id:'dashboard',lbl:'Dashboard',ic:'⊞'},{id:'projects',lbl:'Projects',ic:'📁'},{id:'funnel',lbl:'Pipeline Funnel',ic:'🔻'},{id:'tasks',lbl:'Tasks',ic:'✅'},{id:'ai',lbl:'AI Advisor',ic:'🤖'}];
+
+var S={user:null,token:null,dbId:null,foldId:null,projects:[],nav:'dashboard',sel:null,dtab:'overview',aiResp:'',aiLoad:false,gapiOk:false,gisOk:false,tc:null};
+
+function gapiLoad(){
+  gapi.load('client',function(){
+    gapi.client.init({}).then(function(){S.gapiOk=true;tryBoot();});
+  });
+}
+window.addEventListener('load',function(){
+  var t=setInterval(function(){
+    if(typeof google!=='undefined'&&google.accounts){
+      clearInterval(t);
+      S.tc=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPES,callback:function(r){
+        if(r.error){toast('Auth error: '+r.error,'er');return;}
+        S.token=r.access_token;gapi.client.setToken({access_token:S.token});
+        loadOrCreate().then(function(){showApp();});
+      }});
+      S.gisOk=true;tryBoot();
+    }
+  },200);
+});
+function tryBoot(){
+  if(!S.gapiOk||!S.gisOk)return;
+  var cp=localStorage.getItem('efs_proj');
+  if(cp){try{S.projects=JSON.parse(cp);}catch(e){}}
+  var cu=localStorage.getItem('efs_user');
+  if(cu){
+    try{S.user=JSON.parse(cu);}catch(e){}
+    S.tc.requestAccessToken({prompt:''});
+  } else {
+    hide('loading');sho('auth','flex');
+  }
+}
+function doSignIn(){
+  S.tc.requestAccessToken({prompt:'consent'});
+  google.accounts.id.initialize({client_id:CLIENT_ID,callback:function(r){
+    var p=pJwt(r.credential);
+    S.user={name:p.name,email:p.email,pic:p.picture};
+    localStorage.setItem('efs_user',JSON.stringify(S.user));
+    renUser();
+  }});
+  google.accounts.id.prompt();
+}
+function doSignOut(){
+  if(S.token)google.accounts.oauth2.revoke(S.token,function(){});
+  S.user=null;S.token=null;S.dbId=null;
+  localStorage.removeItem('efs_user');localStorage.removeItem('efs_proj');
+  location.reload();
+}
+function pJwt(t){try{return JSON.parse(atob(t.split('.')[1]));}catch(e){return {};}}
+function showApp(){hide('loading');hide('auth');renUser();renNav();sho('wrap','flex');goTo('dashboard');}
+
+async function dReq(path,method,body){
+  method=method||'GET';
+  var opts={method:method,headers:{Authorization:'Bearer '+S.token}};
+  if(body){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(body);}
+  var r=await fetch('https://www.googleapis.com/drive/v3'+path,opts);
+  if(!r.ok)throw new Error('Drive '+r.status);
+  return r.json();
+}
+async function dUp(meta,content,fid){
+  var bnd='-------EFSCRM';var ms=JSON.stringify(meta);
+  var bd='--'+bnd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+ms+'\r\n--'+bnd+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+bnd+'--';
+  var url=fid?'https://www.googleapis.com/upload/drive/v3/files/'+fid+'?uploadType=multipart':'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+  var r=await fetch(url,{method:fid?'PATCH':'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'multipart/related; boundary="'+bnd+'"'},body:bd});
+  return r.json();
+}
+async function loadOrCreate(){
+  try{
+    var q1='/files?q=name%3D%27EFS_CRM_Data%27+and+mimeType%3D%27application%2Fvnd.google-apps.folder%27+and+trashed%3Dfalse&fields=files(id)';
+    var fr=await dReq(q1);
+    if(fr.files&&fr.files.length){S.foldId=fr.files[0].id;}
+    else{var f=await dReq('/files','POST',{name:'EFS_CRM_Data',mimeType:'application/vnd.google-apps.folder'});S.foldId=f.id;}
+    var q2='/files?q=name%3D%27'+encodeURIComponent(DB_NAME)+'%27+and+%27'+S.foldId+'%27+in+parents+and+trashed%3Dfalse&fields=files(id)';
+    var dr=await dReq(q2);
+    if(dr.files&&dr.files.length){
+      S.dbId=dr.files[0].id;
+      var cr2=await fetch('https://www.googleapis.com/drive/v3/files/'+S.dbId+'?alt=media',{headers:{Authorization:'Bearer '+S.token}});
+      var d=await cr2.json();S.projects=d.projects||[];
+      localStorage.setItem('efs_proj',JSON.stringify(S.projects));
+    } else {
+      S.projects=seedData();await saveDB();
+    }
+  }catch(e){
+    var cp=localStorage.getItem('efs_proj');
+    if(cp){try{S.projects=JSON.parse(cp);}catch(e2){}}
+    toast('Working offline - Drive syncs when connected','in');
+  }
+}
+async function saveDB(){
+  try{
+    var c=JSON.stringify({projects:S.projects,updated:new Date().toISOString()});
+    if(S.dbId){await dUp({name:DB_NAME},c,S.dbId);}
+    else if(S.foldId){var f=await dUp({name:DB_NAME,parents:[S.foldId]},c);S.dbId=f.id;}
+    localStorage.setItem('efs_proj',JSON.stringify(S.projects));
+  }catch(e){
+    localStorage.setItem('efs_proj',JSON.stringify(S.projects));
+    toast('Saved locally (Drive sync pending)','in');
+  }
+}
+async function upFile(file,pid){
+  return new Promise(function(res,rej){
+    var q='/files?q=name%3D%27proj_'+pid+'%27+and+%27'+S.foldId+'%27+in+parents+and+trashed%3Dfalse&fields=files(id)';
+    dReq(q).then(function(fr){
+      var pfp;
+      if(fr.files&&fr.files.length){pfp=Promise.resolve(fr.files[0].id);}
+      else{pfp=dReq('/files','POST',{name:'proj_'+pid,mimeType:'application/vnd.google-apps.folder',parents:[S.foldId]}).then(function(f){return f.id;});}
+      pfp.then(function(pfId){
+        var rd=new FileReader();
+        rd.onload=function(e){
+          var b64=e.target.result.split(',')[1];
+          var bnd='-------EFSUP';var mt=JSON.stringify({name:file.name,parents:[pfId]});
+          var bd='--'+bnd+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+mt+'\r\n--'+bnd+'\r\nContent-Type: '+(file.type||'application/octet-stream')+'\r\nContent-Transfer-Encoding: base64\r\n\r\n'+b64+'\r\n--'+bnd+'--';
+          fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'multipart/related; boundary="'+bnd+'"'},body:bd})
+          .then(function(r){return r.json();}).then(function(d){
+            res({id:d.id,name:file.name,size:file.size,type:file.type,link:'https://drive.google.com/file/d/'+d.id+'/view'});
+          }).catch(rej);
+        };
+        rd.readAsDataURL(file);
+      }).catch(rej);
+    }).catch(rej);
+  });
+}
+
+function seedData(){
+  var t=td();
+  return [
+    {id:'p1',name:'Lodha Palava Phase 7',developer:'Lodha Group',system:'Curtain Wall',stage:'Negotiation',value:3.2,area:'Dombivli',contact:'Rahul Mehta',phone:'9876543210',email:'rahul@lodha.com',notes:'VP Projects is key decision maker. Architect: RSP. IGBC glazing required. Budget firm at Rs 3Cr.',nextAction:'Follow up on revised BOQ',nextDate:'2026-04-12',lastActivity:'Submitted revised BOQ with 4% discount',activities:[{id:'a1',date:'2026-04-05',type:'Meeting',note:'Presented facade system options at Thane office. Very positive response.',attachments:[]},{id:'a2',date:'2026-03-28',type:'Call',note:'Discussed budget. They want below Rs 3.5Cr.',attachments:[]}],tasks:[{id:'t1',text:'Send revised BOQ',done:true,due:'2026-04-05'},{id:'t2',text:'Follow up on approval from VP',done:false,due:'2026-04-12'}],attachments:[],created:t},
+    {id:'p2',name:'Godrej Reserve Thane',developer:'Godrej Properties',system:'Unitised Glazing',stage:'Proposal Sent',value:2.1,area:'Thane',contact:'Sneha Patil',phone:'9123456789',email:'sneha@godrej.com',notes:'Premium residential. IGBC compliant glazing. Architect: Hafeez Contractor.',nextAction:'Schedule tech team presentation',nextDate:'2026-04-15',lastActivity:'Sent technical proposal and 3D renders',activities:[{id:'a3',date:'2026-04-02',type:'Email',note:'Sent full proposal package with renders.',attachments:[]}],tasks:[{id:'t3',text:'Prepare facade sample board',done:false,due:'2026-04-13'},{id:'t4',text:'Book conference room',done:false,due:'2026-04-14'}],attachments:[],created:t},
+    {id:'p3',name:'Oberoi Eternia Mumbai',developer:'Oberoi Realty',system:'Spider Glazing',stage:'Lead',value:1.8,area:'Mulund',contact:'Vikram Joshi',phone:'9988776655',email:'vikram@oberoi.com',notes:'Premium project. Very quality-focused. Need strong references from completed projects.',nextAction:'Get RFQ from procurement team',nextDate:'2026-04-18',lastActivity:'Cold outreach via LinkedIn',activities:[],tasks:[{id:'t5',text:'Send company profile and references',done:false,due:'2026-04-10'}],attachments:[],created:t},
+    {id:'p4',name:'Hiranandani Fortune City',developer:'Hiranandani',system:'ACP Cladding',stage:'Awarded',value:4.5,area:'Panvel',contact:'Arun Singh',phone:'9765432180',email:'arun@hiranandani.com',notes:'Won at Rs 4.5Cr. Payment 60-30-10. Site start May 2026. PM: Suresh Nair.',nextAction:'Kick off fabrication drawings',nextDate:'2026-04-11',lastActivity:'LOI received. BOQ finalized.',activities:[{id:'a4',date:'2026-04-01',type:'Meeting',note:'Contract signing at HQ. LOI signed.',attachments:[]},{id:'a5',date:'2026-03-20',type:'Negotiation',note:'Final price negotiation. Held firm at Rs 4.5Cr.',attachments:[]}],tasks:[{id:'t6',text:'Submit insurance documents',done:true,due:'2026-04-08'},{id:'t7',text:'Mobilise site team',done:false,due:'2026-04-20'}],attachments:[],created:t},
+    {id:'p5',name:'Tata Serein Thane',developer:'Tata Realty',system:'Aluminium Windows',stage:'Prospect',value:0.9,area:'Thane',contact:'Priya Iyer',phone:'9001122334',email:'priya@tata.com',notes:'Mid-segment. Cost-sensitive. Volume opportunity if we deliver well.',nextAction:'Send spec sheet and pricing',nextDate:'2026-04-11',lastActivity:'Met at PropTech Expo Mumbai 2026',activities:[{id:'a6',date:'2026-03-30',type:'Meeting',note:'Met at PropTech Mumbai 2026. Good conversation.',attachments:[]}],tasks:[{id:'t8',text:'Prepare window spec catalogue',done:false,due:'2026-04-11'}],attachments:[],created:t}
+  ];
+}
+
+function td(){return new Date().toISOString().split('T')[0];}
+function cr(v){return '\u20B9'+(+v).toFixed(2)+'Cr';}
+function uid(){return 'x'+Math.random().toString(36).slice(2,9);}
+function hide(id){var e=document.getElementById(id);if(e)e.style.display='none';}
+function sho(id,d){var e=document.getElementById(id);if(e)e.style.display=d||'block';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function pill(stage){var c=SCOL[stage]||'#888';return '<span class="pill" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44">'+stage.toUpperCase()+'</span>';}
+function toast(msg,type,dur){
+  dur=dur||3200;type=type||'in';
+  var icons={ok:'&#9989;',er:'&#10060;',in:'&#8505;&#65039;'};
+  var el=document.createElement('div');el.className='tst '+type;
+  el.innerHTML='<span>'+icons[type]+'</span><span>'+esc(msg)+'</span>';
+  document.getElementById('toast').appendChild(el);
+  setTimeout(function(){el.remove();},dur);
+}
+function wa(phone,proj,task,due){
+  var m=encodeURIComponent('EFS Task Reminder\n\nProject: '+proj+'\nTask: '+task+'\nDue: '+due+'\n\n- Ajinkya Bhoir, BDM\nEverest Facade Systems Mumbai');
+  window.open('https://wa.me/'+phone+'?text='+m,'_blank');
+}
+function waProj(phone,name){
+  var m=encodeURIComponent('Hi,\n\nFollowing up on '+name+'.\n\nWhen can we connect for next steps?\n\n- Ajinkya Bhoir\nBDM, Everest Facade Systems');
+  window.open('https://wa.me/'+phone+'?text='+m,'_blank');
+}
+function fsz(b){if(!b)return '';if(b<1024)return b+'B';if(b<1048576)return (b/1024).toFixed(1)+'KB';return (b/1048576).toFixed(1)+'MB';}
+function fext(n){var e=(n||'').split('.').pop().toLowerCase();if(['jpg','jpeg','png','gif','webp'].indexOf(e)>=0)return '&#128247;';if(e==='pdf')return '&#128196;';if(['xlsx','xls','csv'].indexOf(e)>=0)return '&#128202;';if(['docx','doc'].indexOf(e)>=0)return '&#128221;';return '&#128206;';}
+function wasvg(sz){return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.855L.057 23.428a.5.5 0 00.609.61l5.579-1.463A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.374l-.36-.213-3.716.975.993-3.63-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>';}
+
+function renNav(){
+  var pend=S.projects.flatMap(function(p){return p.tasks||[];}).filter(function(t){return !t.done;}).length;
+  var h='';
+  for(var i=0;i<NAVS.length;i++){
+    var n=NAVS[i];
+    var bdg=n.id==='tasks'&&pend>0?'<span class="sbdg">'+pend+'</span>':'';
+    h+='<button class="si'+(S.nav===n.id?' on':'')+'" onclick="goTo(\''+n.id+'\')">';
+    h+='<span>'+n.ic+'</span><span>'+n.lbl+'</span>'+bdg+'</button>';
+  }
+  document.getElementById('snav').innerHTML=h;
+}
+function renUser(){
+  var av=document.getElementById('sav');var un=document.getElementById('sunm');if(!av||!un)return;
+  if(S.user){un.textContent=(S.user.name||'Ajinkya').split(' ')[0];if(S.user.pic)av.innerHTML='<img src="'+S.user.pic+'" alt=""/>';else av.textContent=(S.user.name||'A').charAt(0).toUpperCase();}
+}
+function updPip(){
+  var tot=S.projects.reduce(function(a,b){return a+(+b.value||0);},0);
+  var pct=Math.min(100,(tot/12)*100);
+  var f=document.getElementById('pipfil');var l=document.getElementById('piplbl');
+  if(f)f.style.width=pct+'%';if(l)l.textContent=cr(tot)+' / \u20B912Cr';
+}
+function togSB(){document.getElementById('sidebar').classList.toggle('op');document.getElementById('sov').classList.toggle('op');}
+function closeSB(){document.getElementById('sidebar').classList.remove('op');document.getElementById('sov').classList.remove('op');}
+function goTo(page){
+  S.nav=page;renNav();updPip();
+  var pg=document.getElementById('pg');
+  if(page==='dashboard')pg.innerHTML=pgDash();
+  else if(page==='projects')pg.innerHTML=pgProj('All');
+  else if(page==='funnel')pg.innerHTML=pgFunnel();
+  else if(page==='tasks')pg.innerHTML=pgTasks();
+  else if(page==='ai')pg.innerHTML=pgAI();
+  if(window.innerWidth<=768)closeSB();
+}
+
+function pgDash(){
+  var tot=S.projects.reduce(function(a,b){return a+(+b.value||0);},0);
+  var awd=S.projects.filter(function(p){return p.stage==='Awarded';}).reduce(function(a,b){return a+(+b.value||0);},0);
+  var act=S.projects.filter(function(p){return p.stage!=='Lost'&&p.stage!=='Awarded';}).length;
+  var ov=S.projects.flatMap(function(p){return p.tasks||[];}).filter(function(t){return !t.done&&t.due<td();}).length;
+  var today=td();
+  var up=S.projects.filter(function(p){return p.nextDate>=today&&p.stage!=='Lost';}).sort(function(a,b){return a.nextDate.localeCompare(b.nextDate);}).slice(0,5);
+  var uhtml='';
+  for(var i=0;i<up.length;i++){
+    var p=up[i];
+    uhtml+='<div class="pc" style="animation:none;cursor:pointer" onclick="openDet(\''+p.id+'\')">';
+    uhtml+='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">';
+    uhtml+='<div style="flex:1;min-width:0">'+pill(p.stage);
+    uhtml+='<div style="font-weight:700;font-size:14px;margin-top:6px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</div>';
+    uhtml+='<div style="color:var(--tx3);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.nextAction)+'</div></div>';
+    uhtml+='<div style="color:var(--am);font-family:var(--mo);font-size:12px;flex-shrink:0">'+p.nextDate+'</div></div></div>';
+  }
+  if(!uhtml)uhtml='<div class="empty"><div class="ei">&#127919;</div><p>No upcoming actions.</p></div>';
+  var sbh='';
+  for(var j=0;j<STAGES.length;j++){
+    var s=STAGES[j];var c=SCOL[s];
+    var items=S.projects.filter(function(p2){return p2.stage===s;});
+    var sv=items.reduce(function(a,b){return a+(+b.value||0);},0);
+    sbh+='<div style="background:var(--s2);border:1px solid '+c+'33;border-radius:12px;padding:13px 16px;min-width:100px">';
+    sbh+=pill(s)+'<div style="font-size:23px;font-weight:800;margin-top:9px">'+items.length+'</div>';
+    sbh+='<div style="color:var(--go2);font-size:12px;font-family:var(--mo)">'+(sv>0?cr(sv):'&mdash;')+'</div></div>';
+  }
+  var hr=new Date().getHours();
+  var gr=hr<12?'morning':hr<17?'afternoon':'evening';
+  var h='';
+  h+='<div class="ph"><div><div class="pt">Good '+gr+', Ajinkya &#128075;</div>';
+  h+='<div class="ps">EFS pipeline &middot; '+td()+'</div></div></div>';
+  h+='<div class="sgrid">';
+  h+='<div class="scard" style="--cc:var(--ac);animation-delay:.0s"><div class="slbl">Total Pipeline</div><div class="sval">'+cr(tot)+'</div><div class="ssub">'+Math.round((tot/12)*100)+'% of &#8377;12Cr</div></div>';
+  h+='<div class="scard" style="--cc:var(--gn);animation-delay:.08s"><div class="slbl">Awarded</div><div class="sval" style="color:var(--gn2)">'+cr(awd)+'</div><div class="ssub">'+S.projects.filter(function(p){return p.stage==='Awarded';}).length+' won</div></div>';
+  h+='<div class="scard" style="--cc:var(--am);animation-delay:.16s"><div class="slbl">Active Deals</div><div class="sval" style="color:var(--am)">'+act+'</div><div class="ssub">In progress</div></div>';
+  h+='<div class="scard" style="--cc:'+(ov>0?'var(--rd)':'var(--gn)')+'";animation-delay:.24s"><div class="slbl">Overdue Tasks</div><div class="sval" style="color:'+(ov>0?'var(--rd2)':'var(--gn2)')+'">'+ov+'</div><div class="ssub">'+(ov>0?'&#9888; Needs attention':'All on track &#10003;')+'</div></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px">';
+  h+='<div style="background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:20px;animation:fu .4s .3s ease both"><div class="sh" style="margin-bottom:14px">&#128197; UPCOMING ACTIONS</div>'+uhtml+'</div>';
+  h+='<div style="background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:20px;animation:fu .4s .35s ease both"><div class="sh" style="margin-bottom:12px">STAGE BREAKDOWN</div><div style="display:flex;flex-wrap:wrap;gap:9px">'+sbh+'</div></div>';
+  h+='</div>';
+  return h;
+}
+
+function pgProj(filter){
+  var all=S.projects;
+  var shown=filter==='All'?all:all.filter(function(p){return p.stage===filter;});
+  var chips='';
+  var ff=['All'].concat(STAGES);
+  for(var i=0;i<ff.length;i++) chips+='<button class="fc2'+(filter===ff[i]?' on':'')+'" onclick="pfilt(\''+ff[i]+'\')">'+ff[i]+'</button>';
+  var cards='';
+  if(!shown.length){cards='<div class="empty" style="grid-column:1/-1"><div class="ei">&#128193;</div><p>No projects here. Add a deal!</p></div>';}
+  else{
+    for(var j=0;j<shown.length;j++){
+      var p=shown[j];
+      cards+='<div class="pc" style="animation-delay:'+j*.05+'s" onclick="openDet(\''+p.id+'\')">';
+      cards+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">';
+      cards+='<div style="flex:1;min-width:0;margin-right:10px"><div class="pnm">'+esc(p.name)+'</div><div class="pdv">&#127970; '+esc(p.developer)+'</div></div>';
+      cards+=pill(p.stage)+'</div>';
+      cards+='<div class="pmeta">';
+      cards+='<div><span class="pml">Value</span><div class="pmv gold">'+cr(p.value)+'</div></div>';
+      cards+='<div><span class="pml">System</span><div class="pmv" style="font-size:12px;color:var(--tx2)">'+esc(p.system)+'</div></div>';
+      cards+='<div><span class="pml">Area</span><div class="pmv" style="font-size:12px;color:var(--tx2)">'+esc(p.area)+'</div></div></div>';
+      cards+='<div class="pft">&#128276; <span style="color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.lastActivity||'No activity')+'</span></div></div>';
+    }
+  }
+  var h='';
+  h+='<div class="ph"><div><div class="pt">Projects</div><div class="ps">'+shown.length+' of '+all.length+' shown</div></div>';
+  h+='<button class="btn bp" onclick="openAdd()">+ New Deal</button></div>';
+  h+='<div class="fchrow">'+chips+'</div><div class="pgrid">'+cards+'</div>';
+  return h;
+}
+function pfilt(f){document.getElementById('pg').innerHTML=pgProj(f);}
+
+function pgFunnel(){
+  var tot=S.projects.reduce(function(a,b){return a+(+b.value||0);},0);
+  var awd=S.projects.filter(function(p){return p.stage==='Awarded';}).length;
+  var act=S.projects.filter(function(p){return p.stage!=='Lost'&&p.stage!=='Awarded';}).length;
+  var rows='';
+  var vis=STAGES.filter(function(s){return s!=='Lost';});
+  for(var i=0;i<vis.length;i++){
+    var s=vis[i];var c=SCOL[s];
+    var items=S.projects.filter(function(p){return p.stage===s;});
+    var sv=items.reduce(function(a,b){return a+(+b.value||0);},0);
+    var pct=tot>0?Math.min(100,(sv/tot)*100):0;
+    var chips='';
+    for(var j=0;j<items.length;j++) chips+='<div class="fchp">'+esc(items[j].name.split(' ').slice(0,3).join(' '))+'</div>';
+    if(!chips)chips='<span style="color:var(--tx3);font-size:11px">No deals</span>';
+    rows+='<div class="frow">';
+    rows+='<div class="flbl">'+pill(s)+'</div>';
+    rows+='<div class="fbw"><div class="fbf" style="width:'+pct+'%;background:linear-gradient(90deg,'+c+'55,'+c+'22);border-right:2px solid '+c+'"></div><div class="fbc">'+chips+'</div></div>';
+    rows+='<div class="fval">'+(sv>0?cr(sv):'&mdash;')+'</div><div class="fcnt">'+items.length+'</div></div>';
+  }
+  var h='';
+  h+='<div class="ph"><div><div class="pt">Pipeline Funnel</div><div class="ps">Deal flow &middot; Lead &#8594; Awarded</div></div></div>';
+  h+='<div style="background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:26px;margin-bottom:18px;animation:fu .35s ease both"><div class="sh" style="margin-bottom:18px">DEAL FLOW BY STAGE</div>'+rows+'</div>';
+  h+='<div class="sgrid">';
+  h+='<div class="scard" style="--cc:var(--gn)"><div class="slbl">Win Rate</div><div class="sval" style="color:var(--gn2)">'+(S.projects.length?Math.round((awd/S.projects.length)*100)+'%':'&mdash;')+'</div><div class="ssub">Lead to Awarded</div></div>';
+  h+='<div class="scard" style="--cc:var(--ac)"><div class="slbl">Avg Deal Size</div><div class="sval">'+(S.projects.length?cr(tot/S.projects.length):'&mdash;')+'</div><div class="ssub">All stages</div></div>';
+  h+='<div class="scard" style="--cc:var(--go)"><div class="slbl">Active Deals</div><div class="sval">'+act+'</div><div class="ssub">In progress</div></div>';
+  h+='</div>';
+  return h;
+}
+
+function pgTasks(){
+  var today=td();
+  var all=S.projects.flatMap(function(p){return (p.tasks||[]).map(function(t){return {id:t.id,text:t.text,done:t.done,due:t.due,pid:p.id,pname:p.name,phone:p.phone};});});
+  var pend=all.filter(function(t){return !t.done;}).sort(function(a,b){return a.due.localeCompare(b.due);});
+  var ov=pend.filter(function(t){return t.due<today;}).length;
+  var th='';
+  for(var i=0;i<pend.length;i++){
+    var t=pend[i];var isov=t.due<today;
+    th+='<div class="ti'+(isov?' ov':'')+'">';
+    th+='<div class="tck" onclick="togGlTk(\''+t.pid+'\',\''+t.id+'\')"></div>';
+    th+='<div style="flex:1;min-width:0"><div class="ttx">'+esc(t.text)+'</div>';
+    th+='<div style="display:flex;align-items:center;gap:10px;margin-top:3px">';
+    th+='<span style="color:var(--ac2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(t.pname)+'</span>';
+    th+='<span class="tdu" style="color:'+(isov?'var(--rd2)':'var(--am)')+'">'+(isov?'&#9888; OVERDUE &middot; ':'')+t.due+'</span></div></div>';
+    th+='<button class="bwa" onclick="wa(\''+esc(t.phone)+'\',\''+esc(t.pname)+'\',\''+esc(t.text)+'\',\''+t.due+'\')">'+wasvg(13)+' Alert</button></div>';
+  }
+  if(!th)th='<div class="empty"><div class="ei">&#127881;</div><p>All tasks complete!</p></div>';
+  var h='';
+  h+='<div class="ph"><div><div class="pt">Task Manager</div><div class="ps">'+pend.length+' pending &middot; '+ov+' overdue</div></div></div>';
+  h+=th;return h;
+}
+
+function pgAI(){
+  var qs=[['&#9889; Pipeline Health','Analyse my full pipeline health vs Rs 12Cr target. Give a frank, prioritised action plan for this week.'],['&#127919; Deal Priorities','Which 2-3 deals should I focus on urgently? Fastest path to Rs 12Cr?'],['&#9888; Risk Flags','Identify risk flags - deals going cold or at risk of being lost. What should I do?'],['&#127970; Developer Strategy','How should I approach each Tier-1 developer in my pipeline? Specific BDM strategies.'],['&#128200; Pipeline Gaps','What gaps exist? How do I build top-of-funnel quickly?'],['&#128197; Weekly Plan','Give me a specific weekly BDM plan: calls, emails, meetings for this week.']];
+  var chips='';
+  for(var i=0;i<qs.length;i++) chips+='<button class="aichp" onclick="pipeAI(\''+qs[i][1].replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')+'\')">'+qs[i][0]+'</button>';
+  var h='';
+  h+='<div class="ph"><div><div class="pt">&#129504; AI Advisor</div><div class="ps">Powered by Groq AI (free) &middot; LLaMA 3.3 70B</div></div></div>';
+  h+='<div style="background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:22px;margin-bottom:18px;animation:fu .35s ease both">';
+  h+='<div class="sh">QUICK ANALYSIS</div><div class="aichps">'+chips+'</div>';
+  h+='<div style="display:flex;gap:9px">';
+  h+='<input class="fc" id="aiqi" placeholder="Ask anything about your pipeline, deals, strategy..." onkeydown="if(event.key===\'Enter\')subAI()"/>';
+  h+='<button class="btn bai" onclick="subAI()">Ask AI</button></div></div>';
+  h+='<div id="aiarea">';
+  if(S.aiLoad)h+='<div style="text-align:center;padding:48px"><div class="spin"></div><div style="color:var(--tx3);font-size:13px;margin-top:14px">Analysing pipeline...</div></div>';
+  else if(S.aiResp)h+='<div style="background:var(--sf);border:1px solid var(--b1);border-radius:14px;padding:22px;animation:fu .35s ease both"><div class="sh" style="margin-bottom:12px">&#129504; AI ANALYSIS</div><div class="airesp">'+esc(S.aiResp)+'</div></div>';
+  h+='</div>';
+  return h;
+}
+function subAI(){var v=document.getElementById('aiqi');if(!v||!v.value.trim())return;pipeAI(v.value.trim());}
+async function pipeAI(q){
+  S.aiLoad=true;S.aiResp='';goTo('ai');
+  var tot=S.projects.reduce(function(a,b){return a+(+b.value||0);},0);
+  var sum=S.projects.map(function(p){return '- '+p.name+' ('+p.developer+') | '+p.stage+' | '+cr(p.value)+' | '+p.system+' | Next: '+p.nextAction+' on '+p.nextDate;}).join('\n');
+  var prompt='I am Ajinkya Bhoir, BDM at EFS (Everest Facade Systems), Mumbai. Target: Rs 12 Crore FY2026-27.\n\nPipeline ('+cr(tot)+'):\n'+sum+'\n\nQuestion: '+q+'\n\nBe frank, direct, actionable. Bullet points. What I can do today.';
+  try{
+    var txt='';
+    if(GROQ_KEY&&GROQ_KEY.length>10){
+      var r=await fetch(GROQ_URL,{method:'POST',headers:{Authorization:'Bearer '+GROQ_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,max_tokens:900,messages:[{role:'system',content:'You are a BDM coach for a facade contracting company in Mumbai, India. Be frank, direct, tactical. Use bullet points and emojis.'},{role:'user',content:prompt}]})});
+      var d=await r.json();
+      txt=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'No response from AI.';
+    } else {
+      await new Promise(function(r2){setTimeout(r2,1400);});
+      txt=mockAI(tot);
+    }
+    S.aiResp=txt;
+  }catch(e){S.aiResp='AI error: '+e.message+'\n\nCheck your Groq API key. Get a free key at console.groq.com';}
+  S.aiLoad=false;goTo('ai');
+}
+function mockAI(tot){
+  return 'Pipeline Analysis - EFS BDM (Ajinkya Bhoir)\n\nPipeline Health: '+Math.round((tot/12)*100)+'% of Rs 12Cr target\n\nTop 3 Priorities This Week:\n- Lodha Palava (Rs 3.2Cr, Negotiation) - Call Rahul Mehta TODAY. BOQ submitted. Chase written approval. Every day = competitor risk.\n- Hiranandani (Rs 4.5Cr, Awarded) - Begin fabrication drawings immediately. Speed = trust for repeat orders.\n- Godrej Reserve (Rs 2.1Cr, Proposal Sent) - Follow up in 48 hrs. Proposals go cold fast. Schedule presentation.\n\nRisk Flags:\n- Oberoi Eternia: Lead with ZERO activity logged. Send company profile + references TODAY or this lead will die.\n- Tata Serein: Cost-sensitive, no spec sheet sent yet. Risk of ghosting. Send today.\n\nPipeline Gap:\nTop-of-funnel is thin (1 Lead only). Add 3-4 new Leads this week for Q3 protection.\n\n[Add your free Groq API key at console.groq.com for live AI analysis]';
+}
+
+function openDet(id){var p=S.projects.find(function(x){return x.id===id;});if(!p)return;S.sel=p;S.dtab='overview';renPanel();sho('dov','flex');}
+function closeDet(){hide('dov');S.sel=null;}
+function ovClk(e){if(e.target===document.getElementById('dov'))closeDet();}
+
+function renPanel(){
+  var p=S.sel;if(!p)return;
+  var si=STAGES.indexOf(p.stage);
+  var segs='';var vis=STAGES.filter(function(s){return s!=='Lost';});
+  for(var i=0;i<vis.length;i++){var on=si>=STAGES.indexOf(vis[i])&&p.stage!=='Lost';segs+='<div class="spseg" style="background:'+(on?SCOL[vis[i]]:'var(--b1)')+'"></div>';}
+  var adv=p.stage!=='Awarded'&&p.stage!=='Lost'?'<button class="btn bp bsm" onclick="advStage()">&#8594; Advance</button>':'';
+  var dh='';
+  dh+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
+  dh+='<div style="flex:1;min-width:0">'+pill(p.stage);
+  dh+='<div style="font-size:19px;font-weight:800;margin-top:7px;line-height:1.25">'+esc(p.name)+'</div>';
+  dh+='<div style="color:var(--tx2);font-size:13px;margin-top:3px">&#127970; '+esc(p.developer)+' &middot; &#128205; '+esc(p.area)+'</div></div>';
+  dh+='<div style="display:flex;gap:7px;align-items:center;flex-shrink:0">'+adv+'<button class="btn bg2 bsm" onclick="closeDet()">&#10005;</button></div></div>';
+  dh+='<div style="display:flex;gap:20px;margin-top:14px;flex-wrap:wrap">';
+  dh+='<div><div style="font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">VALUE</div><div style="color:var(--go2);font-weight:800;font-size:21px;font-family:var(--mo)">'+cr(p.value)+'</div></div>';
+  dh+='<div><div style="font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">SYSTEM</div><div style="font-size:13px;color:var(--tx2);margin-top:2px">'+esc(p.system)+'</div></div>';
+  dh+='<div><div style="font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">CONTACT</div><div style="font-size:13px;color:var(--tx2);margin-top:2px">'+esc(p.contact)+'</div></div>';
+  dh+='<div><div style="font-size:9px;color:var(--tx3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px">PHONE</div><div style="font-size:12px;color:var(--tx2);font-family:var(--mo);margin-top:2px">'+esc(p.phone)+'</div></div>';
+  dh+='</div><div class="spbar">'+segs+'</div>';
+  document.getElementById('dh').innerHTML=dh;
+  var tabs=[['overview','Overview'],['activity','Activity'],['tasks','Tasks'],['files','Files &amp; Photos'],['ai','&#129504; AI']];
+  var th='';
+  for(var i=0;i<tabs.length;i++) th+='<button class="dtab'+(S.dtab===tabs[i][0]?' on':'')+'" onclick="swTab(\''+tabs[i][0]+'\')">'+tabs[i][1]+'</button>';
+  document.getElementById('dt').innerHTML=th;
+  renBody();
+}
+function swTab(t){S.dtab=t;document.querySelectorAll('.dtab').forEach(function(b,i){b.classList.toggle('on',i===['overview','activity','tasks','files','ai'].indexOf(t));});renBody();}
+
+function renBody(){
+  var p=S.sel;if(!p)return;var db=document.getElementById('db');var today=td();var h='';
+  if(S.dtab==='overview'){
+    h+='<div class="ibox"><div class="iblt">Notes</div><div class="ibv">'+esc(p.notes||'No notes yet.')+'</div></div>';
+    h+='<div class="ibox"><div class="iblt">Next Action</div><div class="ibv" style="font-weight:600;font-size:14px">'+esc(p.nextAction||'&mdash;')+'</div>';
+    h+='<div style="color:var(--am);font-size:12px;margin-top:5px;font-family:var(--mo)">&#128197; '+esc(p.nextDate||'&mdash;')+'</div></div>';
+    h+='<div class="ibox"><div class="iblt">Contact</div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
+    h+='<div><div style="font-size:14px;font-weight:600">'+esc(p.contact)+'</div><div style="color:var(--tx3);font-size:12px;margin-top:2px">'+esc(p.email||'')+'</div></div>';
+    h+='<button class="bwa" onclick="waProj(\''+esc(p.phone)+'\',\''+esc(p.name)+'\')">'+wasvg(14)+' WhatsApp</button>';
+    h+='</div></div>';
+    h+='<div style="display:flex;justify-content:flex-end;gap:9px;margin-top:14px"><button class="btn bg2 bsm" onclick="openEdit()">&#9999;&#65039; Edit</button></div>';
+    db.innerHTML=h;
+  }
+  else if(S.dtab==='activity'){
+    h+='<div class="ibox" style="margin-bottom:14px"><div class="iblt" style="margin-bottom:10px">LOG ACTIVITY</div>';
+    h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px" id="atr">';
+    for(var i=0;i<ATYPES.length;i++) h+='<button class="fc2'+(ATYPES[i]==='Call'?' on':'')+'" onclick="selAct(this,\''+ATYPES[i]+'\')">'+AICONS[ATYPES[i]]+' '+ATYPES[i]+'</button>';
+    h+='</div><input type="hidden" id="atv" value="Call"/>';
+    h+='<textarea class="fc" id="ano" placeholder="What happened? Key points..." style="min-height:80px;margin-bottom:9px"></textarea>';
+    h+='<button class="btn bp bsm" onclick="logAct()">Log Activity</button></div>';
+    var acts=p.activities||[];
+    if(!acts.length){h+='<div class="empty"><div class="ei">&#128203;</div><p>No activities yet.</p></div>';}
+    else{
+      for(var j=0;j<acts.length;j++){
+        var a=acts[j];
+        h+='<div class="aitm"><div class="aibdg">'+(AICONS[a.type]||'&#128204;')+'</div>';
+        h+='<div style="flex:1;min-width:0"><div class="aitp"><span class="aityp">'+esc(a.type)+'</span><span class="aidt">'+a.date+'</span></div>';
+        h+='<div class="ainot">'+esc(a.note)+'</div>';
+        if(a.attachments&&a.attachments.length){
+          h+='<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:5px">';
+          for(var k=0;k<a.attachments.length;k++) h+='<a href="'+a.attachments[k].link+'" target="_blank" style="background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--ac2)">&#128206; '+esc(a.attachments[k].name)+'</a>';
+          h+='</div>';
+        }
+        h+='</div></div>';
+      }
+    }
+    db.innerHTML=h;
+  }
+  else if(S.dtab==='tasks'){
+    h+='<div class="ibox" style="margin-bottom:13px"><div class="iblt" style="margin-bottom:10px">ADD TASK</div>';
+    h+='<input class="fc" id="txi" placeholder="Task description..." style="margin-bottom:9px"/>';
+    h+='<div style="display:flex;gap:8px"><input type="date" class="fc" id="tdi" value="'+today+'" style="flex:1"/><button class="btn bp bsm" onclick="addTask()">Add</button></div></div>';
+    var tasks=p.tasks||[];
+    var pend=tasks.filter(function(t){return !t.done;});
+    var done=tasks.filter(function(t){return t.done;});
+    if(!tasks.length){h+='<div class="empty"><div class="ei">&#9989;</div><p>No tasks yet.</p></div>';}
+    var mkT=function(t){
+      var isov=!t.done&&t.due<today;
+      var s='<div class="ti'+(isov?' ov':'')+'">';
+      s+='<div class="tck'+(t.done?' dn':'')+'" onclick="togTask(\''+t.id+'\')">'+(t.done?'<svg width="12" height="12" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>':'')+'</div>';
+      s+='<div style="flex:1;min-width:0"><div class="ttx'+(t.done?' dn':'')+'">'+esc(t.text)+'</div>';
+      s+='<div class="tdu" style="color:'+(isov?'var(--rd2)':t.done?'var(--tx3)':'var(--am)')+'">'+(isov?'&#9888; OVERDUE &middot; ':'')+t.due+'</div></div>';
+      s+='<button class="bwa" onclick="wa(\''+esc(p.phone)+'\',\''+esc(p.name)+'\',\''+esc(t.text)+'\',\''+t.due+'\')">'+wasvg(13)+' Alert</button></div>';
+      return s;
+    };
+    for(var i=0;i<pend.length;i++) h+=mkT(pend[i]);
+    if(done.length)h+='<div style="margin:14px 0 9px;color:var(--tx3);font-size:10px;font-weight:700;letter-spacing:1.5px">COMPLETED</div>';
+    for(var j=0;j<done.length;j++) h+=mkT(done[j]);
+    db.innerHTML=h;
+  }
+  else if(S.dtab==='files'){
+    var atts=p.attachments||[];
+    h+='<div class="ibox" style="margin-bottom:13px"><div class="iblt" style="margin-bottom:10px">UPLOAD TO DRIVE</div>';
+    h+='<div style="color:var(--tx3);font-size:12px;margin-bottom:10px;line-height:1.6">Photos, BOQs, drawings stored in Google Drive under EFS_CRM_Data/proj_'+p.id+'/</div>';
+    h+='<label style="display:flex;align-items:center;gap:10px;background:var(--s3);border:2px dashed var(--b2);border-radius:10px;padding:15px 18px;cursor:pointer" onmouseover="this.style.borderColor=\'var(--ac)\'" onmouseout="this.style.borderColor=\'var(--b2)\'">';
+    h+='<span style="font-size:22px">&#128228;</span>';
+    h+='<div><div style="font-weight:600;font-size:13px;color:var(--tx)">Choose files to upload</div><div style="font-size:11px;color:var(--tx3);margin-top:2px">Photos, PDFs, Excel, CAD - any format</div></div>';
+    h+='<input type="file" id="fui" multiple style="display:none" onchange="onUp(event)"/></label>';
+    h+='<div id="uprog" style="margin-top:9px"></div></div>';
+    if(!atts.length){h+='<div class="empty"><div class="ei">&#128193;</div><p>No files yet.</p></div>';}
+    else{
+      h+='<div class="alist">';
+      for(var i=0;i<atts.length;i++){var at=atts[i];h+='<div class="ait"><div class="aiic">'+fext(at.name)+'</div><div style="flex:1;min-width:0"><div class="ainm">'+esc(at.name)+'</div><div class="aisz">'+fsz(at.size)+'</div></div><a href="'+at.link+'" target="_blank" class="btn bg2 bsm">Open</a></div>';}
+      h+='</div>';
+    }
+    db.innerHTML=h;
+  }
+  else if(S.dtab==='ai'){
+    var dqs=[['&#127919; Next Move','What is my best next move for this deal?'],['&#128172; Objections','How should I handle pricing objections from this developer?'],['&#128231; Draft Email','Draft a professional follow-up email for this deal.'],['&#9888; Risk','What risks could cause me to lose this deal?'],['&#128188; Negotiate','What should my negotiation strategy be?']];
+    h+='<div class="ibox" style="background:linear-gradient(135deg,var(--s2),var(--s3));border-color:var(--b2)">';
+    h+='<div style="font-size:13px;color:var(--tx2);margin-bottom:13px;line-height:1.6">Ask AI about <strong style="color:var(--tx)">'+esc(p.name)+'</strong> &mdash; strategy, objections, email drafts, risk analysis...</div>';
+    h+='<div class="aichps">';
+    for(var i=0;i<dqs.length;i++) h+='<button class="aichp" onclick="dealAI(\''+dqs[i][1].replace(/\\/g,'\\\\').replace(/'/g,'\\\'').replace(/"/g,'&quot;')+'\')">'+dqs[i][0]+'</button>';
+    h+='</div>';
+    h+='<div style="display:flex;gap:8px"><input class="fc" id="daiq" placeholder="Ask about this deal..." onkeydown="if(event.key===\'Enter\')subDlAI()"/><button class="btn bai bsm" onclick="subDlAI()" style="white-space:nowrap">Ask</button></div></div>';
+    h+='<div id="dairesp"></div>';
+    db.innerHTML=h;
+  }
+}
+
+function selAct(btn,type){document.querySelectorAll('#atr .fc2').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');document.getElementById('atv').value=type;}
+function logAct(){
+  var type=document.getElementById('atv')?document.getElementById('atv').value:'Call';
+  var note=document.getElementById('ano')?document.getElementById('ano').value.trim():'';
+  if(!note){toast('Enter activity notes','er');return;}
+  var p=S.sel;var act={id:uid(),date:td(),type:type,note:note,attachments:[]};
+  p.activities=[act].concat(p.activities||[]);p.lastActivity=note;
+  saveDB().then(function(){renNav();renPanel();renBody();toast('Activity logged','ok');});
+}
+function togTask(tid){
+  var p=S.sel;var t=(p.tasks||[]).find(function(x){return x.id===tid;});if(!t)return;
+  t.done=!t.done;saveDB().then(function(){renNav();renBody();toast(t.done?'Task done':'Reopened','ok');});
+}
+function addTask(){
+  var txt=document.getElementById('txi')?document.getElementById('txi').value.trim():'';
+  var due=document.getElementById('tdi')?document.getElementById('tdi').value:td();
+  if(!txt){toast('Enter task description','er');return;}
+  var p=S.sel;p.tasks=(p.tasks||[]).concat([{id:uid(),text:txt,due:due,done:false}]);
+  saveDB().then(function(){renNav();renBody();toast('Task added','ok');});
+}
+function advStage(){
+  var p=S.sel;var idx=STAGES.indexOf(p.stage);if(idx>=STAGES.length-2)return;
+  p.stage=STAGES[idx+1];p.lastActivity='Stage advanced to '+p.stage;
+  saveDB().then(function(){renNav();renPanel();renBody();toast('Stage changed to '+p.stage,'ok');});
+}
+function onUp(e){
+  var files=Array.from(e.target.files);if(!files.length)return;
+  if(!S.token){toast('Not signed into Drive','er');return;}
+  var p=S.sel;var pr=document.getElementById('uprog');
+  (function loop(i){
+    if(i>=files.length){if(pr)pr.innerHTML='';renBody();return;}
+    var f=files[i];if(pr)pr.innerHTML='<div style="color:var(--tx2);font-size:12px">Uploading '+esc(f.name)+'...</div>';
+    upFile(f,p.id).then(function(r){p.attachments=(p.attachments||[]).concat([r]);saveDB().then(function(){toast(f.name+' uploaded','ok');loop(i+1);});}).catch(function(err){toast('Upload failed: '+f.name,'er');loop(i+1);});
+  })(0);
+}
+function subDlAI(){var v=document.getElementById('daiq');if(!v||!v.value.trim())return;dealAI(v.value.trim());}
+async function dealAI(q){
+  var p=S.sel;var ar=document.getElementById('dairesp');if(!ar)return;
+  ar.innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="color:var(--tx3);font-size:13px;margin-top:12px">Analysing deal...</div></div>';
+  var prompt='Project: '+p.name+'\nDeveloper: '+p.developer+'\nStage: '+p.stage+'\nValue: '+cr(p.value)+'\nSystem: '+p.system+'\nNotes: '+(p.notes||'')+'\nActivities: '+(p.activities||[]).map(function(a){return a.date+' '+a.type+': '+a.note;}).join('; ')+'\nNext Action: '+p.nextAction+'\nQuestion: '+q;
+  try{
+    var txt='';
+    if(GROQ_KEY&&GROQ_KEY.length>10){
+      var r=await fetch(GROQ_URL,{method:'POST',headers:{Authorization:'Bearer '+GROQ_KEY,'Content-Type':'application/json'},body:JSON.stringify({model:GROQ_MODEL,max_tokens:700,messages:[{role:'system',content:'BDM advisor for Mumbai facade company. Be frank, direct, tactical. Use bullets.'},{role:'user',content:prompt}]})});
+      var d=await r.json();
+      txt=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'No response.';
+    } else {
+      await new Promise(function(r2){setTimeout(r2,1000);});
+      txt='Deal: '+p.name+' | Stage: '+p.stage+'\n\nRecommended Next Move:\n- '+p.nextAction+' by '+p.nextDate+' is critical\n- For '+p.developer+': engage both technical and commercial decision-makers\n- Differentiate on quality and execution speed, not just price\n\nAdd your free Groq API key (console.groq.com) for live AI analysis.';
+    }
+    ar.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:17px;margin-top:12px"><div class="sh" style="margin-bottom:9px">AI RESPONSE</div><div style="font-size:13px;line-height:1.9;color:var(--tx);white-space:pre-wrap">'+esc(txt)+'</div></div>';
+  }catch(e){ar.innerHTML='<div style="color:var(--rd2);font-size:13px;padding:14px">AI error: '+esc(e.message)+'</div>';}
+}
+function togGlTk(pid,tid){
+  var p=S.projects.find(function(x){return x.id===pid;});if(!p)return;
+  var t=(p.tasks||[]).find(function(x){return x.id===tid;});if(!t)return;
+  t.done=!t.done;saveDB().then(function(){renNav();goTo('tasks');toast(t.done?'Task done':'Reopened','ok');});
+}
+function openAdd(){openMod(null);}function openEdit(){openMod(S.sel);}
+function openMod(project){
+  var isEdit=!!project;
+  var p=project||{name:'',developer:DEVS[0],system:SYSTEMS[0],stage:'Lead',value:'',area:'',contact:'',phone:'',email:'',notes:'',nextAction:'',nextDate:td()};
+  var dOpts='',sOpts='',stOpts='';
+  for(var i=0;i<DEVS.length;i++) dOpts+='<option'+(DEVS[i]===p.developer?' selected':'')+'>'+esc(DEVS[i])+'</option>';
+  for(var j=0;j<SYSTEMS.length;j++) sOpts+='<option'+(SYSTEMS[j]===p.system?' selected':'')+'>'+esc(SYSTEMS[j])+'</option>';
+  for(var k=0;k<STAGES.length;k++) stOpts+='<option'+(STAGES[k]===p.stage?' selected':'')+'>'+STAGES[k]+'</option>';
+  var h='';
+  h+='<div class="mh"><div class="mt">'+(isEdit?'Edit Project':'New Deal')+'</div><button class="btn bg2 bsm" onclick="closeMod()">&#10005;</button></div>';
+  h+='<div class="mb">';
+  h+='<div class="g2"><div class="fg"><label>Project Name *</label><input class="fc" id="mn" value="'+esc(p.name)+'" placeholder="e.g. Lodha Palava Tower 9"/></div>';
+  h+='<div class="fg"><label>Value (Rs Crore)</label><input class="fc" id="mv" type="number" step="0.01" value="'+esc(p.value||'')+'" placeholder="e.g. 2.5"/></div></div>';
+  h+='<div class="g2"><div class="fg"><label>Developer</label><select class="fc" id="mdev">'+dOpts+'</select></div>';
+  h+='<div class="fg"><label>Facade System</label><select class="fc" id="msys">'+sOpts+'</select></div></div>';
+  h+='<div class="g2"><div class="fg"><label>Stage</label><select class="fc" id="mstg">'+stOpts+'</select></div>';
+  h+='<div class="fg"><label>Area / Location</label><input class="fc" id="mar" value="'+esc(p.area)+'" placeholder="e.g. Thane"/></div></div>';
+  h+='<div class="g2"><div class="fg"><label>Contact Person</label><input class="fc" id="mco" value="'+esc(p.contact)+'" placeholder="Full name"/></div>';
+  h+='<div class="fg"><label>Phone</label><input class="fc" id="mph" value="'+esc(p.phone)+'" placeholder="9XXXXXXXXX"/></div></div>';
+  h+='<div class="fg"><label>Email</label><input class="fc" id="mem" value="'+esc(p.email||'')+'" placeholder="contact@developer.com"/></div>';
+  h+='<div class="g2"><div class="fg"><label>Next Action</label><input class="fc" id="mna" value="'+esc(p.nextAction||'')+'" placeholder="What to do next?"/></div>';
+  h+='<div class="fg"><label>Date</label><input type="date" class="fc" id="mnd" value="'+(p.nextDate||td())+'"/></div></div>';
+  h+='<div class="fg"><label>Notes</label><textarea class="fc" id="mno" placeholder="Project context, key people...">'+esc(p.notes||'')+'</textarea></div>';
+  h+='</div><div class="mf"><button class="btn bg2" onclick="closeMod()">Cancel</button>';
+  h+='<button class="btn bp" onclick="saveMod(\''+(isEdit?p.id:'')+'\')">'+( isEdit?'Save Changes':'Create Deal')+'</button></div>';
+  document.getElementById('mbox').innerHTML=h;sho('mov','flex');
+}
+function closeMod(){hide('mov');}
+function movClk(e){if(e.target===document.getElementById('mov'))closeMod();}
+function gv(id){var el=document.getElementById(id);return el?el.value:'';}
+function saveMod(eid){
+  var name=gv('mn').trim();if(!name){toast('Project name required','er');return;}
+  var data={name:name,value:parseFloat(gv('mv'))||0,developer:gv('mdev'),system:gv('msys'),stage:gv('mstg'),area:gv('mar'),contact:gv('mco'),phone:gv('mph'),email:gv('mem'),notes:gv('mno'),nextAction:gv('mna'),nextDate:gv('mnd')};
+  if(eid){
+    var p=S.projects.find(function(x){return x.id===eid;});
+    if(p){Object.assign(p,data);if(S.sel&&S.sel.id===eid)S.sel=p;}
+  } else {
+    var np=Object.assign({id:uid(),lastActivity:'Deal created',activities:[],tasks:[],attachments:[],created:td()},data);
+    S.projects.unshift(np);
+  }
+  saveDB().then(function(){closeMod();toast(eid?'Updated':'Deal created','ok');goTo('projects');if(eid&&S.sel)renPanel();});
+}
+</script>
+</body>
+</html>
